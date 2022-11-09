@@ -1,0 +1,10 @@
+[package]
+name = "HUFFMAN_TREE"
+authors = ["Chaoqi LIU <chaoqil2@illinois.edu>", "Jiahui Lin <jiahui9@illinois.edu>"]
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bitbit = "*"
+serde = { version = "1.0.104", features = ["derive"] }
+serde_json = "1.0.48"
