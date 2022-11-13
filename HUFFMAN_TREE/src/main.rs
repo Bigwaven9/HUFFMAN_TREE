@@ -7,17 +7,58 @@ mod coder;
 use crate::bfile::bfile::*;
 mod bfile;
 
-use std::fs;
-use std::fs::File;
-use std::rc::Rc;
-use std::io::prelude::*;
-use std::io::{Write, BufReader, BufRead, Error};
+use crate::ppm::ppm::ImagePPM;
+mod ppm;
 
 pub fn main() {
 
-    let mut ht = HuffmanTree::new();
-    ht.build_tree_from_text("test.txt");
-    write_huffmantree("output.txt", &ht);
+    let mut ht = build_tree_from_text("test.txt");
+
+    // let x = ht.get_bits_map()[&".".to_string()].clone();
+    // for b in x {
+    //     if b {
+    //         print!("1 ");
+    //     } else {
+    //         print!("0 ");
+    //     }
+    // }
+    // println!("");
+
+    // let res = ht.print_tree();
+    let text = read_from_file("test.txt");
+    let res = encode(&ht, text);
+    println!("{res}");
+
+    write_to_bfile("b.dat", res);
+
+    let origin = read_from_bfile("b.dat");
+    println!("{}", &origin);
+
+    println!("{}", decode(&ht, origin));
+
+
+
+
+    // let mut ht = build_tree_from_text("test.txt");
+    // let en =  encode(&ht, "there’s a way to simplify this process: 
+    // we can create a shortcut to a path with
+    // the use keyword once, and then use the 
+    // shorter name everywhere else in the scope go fuck.".to_string());
+    // println!("en : {}", &en);
+    
+    // let de = decode(&ht, en);
+    // println!("de : {}", &de);
+    
+
+    // let mut ippm = ImagePPM::new();
+
+    // ippm.read_from_file("test.txt");
+    // ippm.compress_to_file("output.dat", "huffmantree.txt");
+
+    // let mut ippm2 = ImagePPM::new();
+    // ippm2.depress_from_file("output.dat", "huffmantree.txt");
+    // ippm2.write_to_file("output.ppm");
+    // write_huffmantree("output.txt", &ht);
 
     // let res = encode(&ht, "12\n5".to_string());
     // println!("encoded as {}", res);
@@ -26,9 +67,9 @@ pub fn main() {
 
     // write_to_file("output.txt", text.clone());
 
-    let mut ht_new = HuffmanTree::new();
-    read_huffmantree("output.txt", &mut ht_new);
-    write_huffmantree("output2.txt", &ht_new);
+    // let mut ht_new = HuffmanTree::new();
+    // read_huffmantree("output.txt", &mut ht_new);
+    // write_huffmantree("output2.txt", &ht_new);
 
 
 
