@@ -37,9 +37,9 @@ impl Pixel {
 
     pub fn set_blue(&mut self, blue : i32) { self.blue_ = blue; }
 
-    fn eq(&self, other: &Self) -> bool {
-        (self.red_== other.red_) && (self.green_ == other.green_) && (self.blue_ == other.blue_)
-    }
+    // fn eq(&self, other: &Self) -> bool {
+    //     (self.red_== other.red_) && (self.green_ == other.green_) && (self.blue_ == other.blue_)
+    // }
 
     fn clone(&self) -> Self {
         Pixel {
@@ -81,20 +81,85 @@ impl ImagePPM {
     }
 
     pub fn compress_to_file(&self, bfile : &str, tree : &str) -> Result<(), Error>  {
-        let mut huffman_tree : HuffmanTree = HuffmanTree::new();
-        huffman_tree.build_tree_from_string(self.get_string());
-        let mut result = Ok(());
-        result = write_to_file(tree, huffmantree_to_stirng(&huffman_tree));
-        result = write_to_bfile(bfile, encode(&huffman_tree, self.get_string()));
-        return result;
+        let huffman_tree : HuffmanTree = self.generate_tree();
+        match write_to_bfile(bfile, encode(&huffman_tree, self.get_string())) {
+            Ok(_) => {
+                println!("Successfully write to {bfile}");
+            },
+            Err(_) => {
+                return Err(Error::new(
+                    std::io::ErrorKind::Other,
+                    "cannot write to bfile",
+                ));
+            }
+        }
+        match write_to_file(tree, huffmantree_to_stirng(&huffman_tree)) {
+            Ok(_) => {
+                println!("Successfully write to {tree}");
+            }
+            Err(_) => {
+                return Err(Error::new(
+                    std::io::ErrorKind::Other,
+                    "cannot write to file",
+                ));
+            }
+        }
+        return Ok(());
     }
 
-    pub fn depress_from_file(&mut self, bfile : &str, tree : &str) {
-        let code = read_from_bfile(bfile);  // get the binary code for the ppm
-        let mut huffman_tree = HuffmanTree::new();  // get tree for depression
-        read_huffmantree(tree, &mut huffman_tree).ok();
-        let ppm_str = decode(&huffman_tree, code);
-        self.generate_ppm_with_string(ppm_str);
+    pub fn compress_to_file_with_tree(&self, bfile : &str, tree : &str) -> Result<(), Error>  {
+        let huffman_tree = read_huffmantree(tree);
+        match huffman_tree {
+            Ok(huffman_tree) => {
+                match write_to_bfile(bfile, encode(&huffman_tree, self.get_string())) {
+                    Ok(_) => {
+                        println!("Successfully write to {bfile}");
+                    },
+                    Err(_) => {
+                        return Err(Error::new(
+                            std::io::ErrorKind::Other,
+                            "cannot write to bfile",
+                        ));
+                    }
+                }
+            },
+            Err(_) => {
+                return Err(Error::new(
+                    std::io::ErrorKind::Other,
+                    "cannot read huffman tree",
+                ));
+            }
+        }
+        return Ok(());
+    }
+
+    pub fn depress_from_file(&mut self, bfile : &str, tree : &str) -> Result<(), Error> {
+        let huffman_tree = read_huffmantree(tree);
+        match huffman_tree {
+            Ok(huffman_tree) => {
+                let code = read_from_bfile(bfile);
+                match code {
+                    Ok(code) => {
+                        let ppm_str = decode(&huffman_tree, code);
+                        self.generate_ppm_with_string(ppm_str);
+                        return Ok(());
+                    },
+                    Err(_) => {
+                        return Err(Error::new(
+                            std::io::ErrorKind::Other,
+                            "cannot open bfile",
+                        ));
+                    }
+                }
+            },
+            Err(_) => {
+                return Err(Error::new(
+                    std::io::ErrorKind::Other,
+                    "cannot read huffman tree",
+                ));
+            }
+        }
+        
     }
 
     fn get_string(&self) -> String {
@@ -112,6 +177,10 @@ impl ImagePPM {
             }
         }
         return ret;
+    }
+
+    pub fn generate_tree(&self) -> HuffmanTree {
+        return build_tree_from_text(self.get_string());
     }
 
     fn generate_ppm_with_string(&mut self, lines : String) {
