@@ -55,11 +55,6 @@ pub fn main() {
     if args.len() == 2 && args[1] == "help" { help(); }
     if args.len() != 6 && !(args[1] == "print" && args.len() == 3) { invalid_argument(); }
 
-    let mut i = 0;
-    println!("\nargs:");
-    for arg in &args { println!("{i}, {arg}"); i += 1 }
-    println!();
-
     let mut o_pos = -1;
     if args.len() != 3 { o_pos = get_o_pos(&args); }
     
@@ -143,12 +138,12 @@ pub fn main() {
                                         println!("Successfully write to {}", &args[5])
                                     },
                                     Err(_) => {
-                                        invalid_argument();
+                                        file_error();
                                     }
                                 }
                             },
                             Err(_) => {
-                                
+                                file_error()
                             }
                         }
                         
